@@ -9,7 +9,6 @@ import { copyImageSourceToClipboard, copyTextToClipboard, getClipboardFailureMes
 import { createMaskPreviewDataUrl } from '../lib/canvasImage'
 import { dismissAllTooltips } from '../lib/tooltipDismiss'
 import { downloadImageEntriesAsZip, downloadImageIds, getImageZipEntries } from '../lib/downloadImages'
-import { isAgentTaskPromptPending } from '../lib/taskPromptDisplay'
 import { replaceImageMentionsForApi } from '../lib/promptImageMentions'
 import { CloseIcon, CodeIcon, CopyIcon, DownloadIcon, EditIcon, LinkIcon, TrashIcon } from './icons'
 
@@ -229,9 +228,9 @@ export default function DetailModal() {
 
   if (!task) return null
 
-  const isAgentTask = task.sourceMode === 'agent' || Boolean(task.agentConversationId || task.agentRoundId)
-  const showPendingPrompt = isAgentTaskPromptPending(task)
-  const isAgentEditTool = task.status === 'done' && String(task.agentToolAction ?? '').toLowerCase() === 'edit'
+  const isAgentTask = false
+  const showPendingPrompt = false
+  const isAgentEditTool = false
   const showReferenceSection = allInputImageIds.length > 0 || isAgentEditTool
 
   const outputLen = outputSlots.length
@@ -1020,7 +1019,7 @@ export default function DetailModal() {
                   <DetailParamValue task={task} paramKey="moderation" className="font-medium" actualParams={currentActualParams} />
                 </div>
               </div>
-              {!isAgentTask && (
+              {(
                 <div className="bg-gray-50 dark:bg-white/[0.03] rounded-lg px-3 py-2 min-w-0 overflow-hidden">
                   <span className="text-gray-400 dark:text-gray-500">数量</span>
                   <br />

@@ -1,9 +1,6 @@
 // ===== 设置 =====
 
 export type ApiMode = 'images' | 'responses'
-export type AppMode = 'gallery' | 'agent'
-export type AgentApiConfigMode = 'off' | 'native' | 'hybrid'
-export type ReferenceImageEditAction = 'ask' | 'replace-reference' | 'add-mask'
 export const ZIP_DOWNLOAD_ROUTE_VALUES = [
   'task-selection',
   'favorite-collection-selection',
@@ -19,6 +16,8 @@ export type ApiProvider = BuiltInApiProvider | string
 export type CustomProviderTemplate = 'http-image'
 export const DEFAULT_STREAM_PARTIAL_IMAGES = 1
 export const DEFAULT_AGENT_MAX_TOOL_ROUNDS = 15
+export type AgentApiConfigMode = 'off' | 'native' | 'hybrid'
+export type AppMode = 'gallery' | 'agent'
 
 export type CustomProviderRequestMethod = 'GET' | 'POST'
 export type CustomProviderContentType = 'json' | 'multipart'
@@ -106,16 +105,19 @@ export interface AppSettings {
   enterSubmit: boolean
   referenceImageEditAction: ReferenceImageEditAction
   zipDownloadRoutes: ZipDownloadRoute[]
-  agentScrollToBottomAfterSubmit: boolean
-  agentMaxToolRounds: number
-  agentWebSearch: boolean
-  agentMathFormattingPrompt: boolean
-  agentApiConfigMode: AgentApiConfigMode
-  agentTextProfileId?: string | null
-  agentImageProfileId?: string | null
   profiles: ApiProfile[]
   activeProfileId: string
+  // @deprecated Agent 功能已移除，以下字段保留用于向后兼容
+  agentScrollToBottomAfterSubmit?: boolean
+  agentMaxToolRounds?: number
+  agentWebSearch?: boolean
+  agentMathFormattingPrompt?: boolean
+  agentApiConfigMode?: AgentApiConfigMode
+  agentTextProfileId?: string | null
+  agentImageProfileId?: string | null
 }
+
+export type ReferenceImageEditAction = 'ask' | 'replace-reference' | 'add-mask'
 
 // ===== 任务参数 =====
 
@@ -218,19 +220,14 @@ export interface TaskRecord {
   isFavorite?: boolean
   /** 所属收藏夹 ID 列表 */
   favoriteCollectionIds?: string[]
-  /** 来源模式：画廊 / Agent */
-  sourceMode?: AppMode
-  /** Agent 对话 ID */
+  /** 源模式：画廊 */
+  sourceMode?: 'gallery' | 'agent'
+  // @deprecated Agent 功能已移除
   agentConversationId?: string
-  /** Agent 轮次 ID */
   agentRoundId?: string
-  /** Agent 消息 ID */
   agentMessageId?: string
-  /** Agent 图像工具调用 ID */
   agentToolCallId?: string
-  /** Agent 批量图像工具调用 ID */
   agentBatchCallId?: string
-  /** Agent 图像工具实际动作 */
   agentToolAction?: 'generate' | 'edit' | 'auto' | string
 }
 
@@ -239,52 +236,6 @@ export interface FavoriteCollection {
   name: string
   createdAt: number
   updatedAt: number
-}
-
-// ===== Agent 模式 =====
-
-export type AgentMessageRole = 'user' | 'assistant'
-export type AgentRoundStatus = 'running' | 'done' | 'error'
-
-export interface AgentMessage {
-  id: string
-  role: AgentMessageRole
-  content: string
-  roundId: string
-  inputImageIds?: string[]
-  maskTargetImageId?: string | null
-  maskImageId?: string | null
-  outputTaskIds?: string[]
-  createdAt: number
-}
-
-export interface AgentRound {
-  id: string
-  index: number
-  parentRoundId?: string | null
-  userMessageId: string
-  assistantMessageId?: string
-  prompt: string
-  inputImageIds: string[]
-  maskTargetImageId?: string | null
-  maskImageId?: string | null
-  outputTaskIds: string[]
-  responseId?: string
-  responseOutput?: ResponsesOutputItem[]
-  status: AgentRoundStatus
-  error: string | null
-  createdAt: number
-  finishedAt: number | null
-}
-
-export interface AgentConversation {
-  id: string
-  title: string
-  activeRoundId?: string | null
-  createdAt: number
-  updatedAt: number
-  rounds: AgentRound[]
-  messages: AgentMessage[]
 }
 
 // ===== IndexedDB 存储的图片 =====
@@ -337,65 +288,6 @@ export interface ImageApiResponse {
   n?: number
 }
 
-export interface ResponsesOutputItem {
-  id?: string
-  type?: string
-  status?: string
-  action?: string | Record<string, unknown>
-  /** function_call: unique call id for sending back function_call_output */
-  call_id?: string
-  /** function_call: function name */
-  name?: string
-  /** function_call: JSON-encoded arguments string */
-  arguments?: string
-  /** function_call_output: JSON/text output string */
-  output?: string
-  annotations?: Array<{
-    type?: string
-    start_index?: number
-    end_index?: number
-    url?: string
-    title?: string
-  }>
-  content?: Array<{
-    type?: string
-    text?: string
-    annotations?: Array<{
-      type?: string
-      start_index?: number
-      end_index?: number
-      url?: string
-      title?: string
-    }>
-  }>
-  result?: string | {
-    b64_json?: string
-    base64?: string
-    image?: string
-    data?: string
-  }
-  size?: string
-  quality?: string
-  output_format?: string
-  output_compression?: number
-  moderation?: string
-  revised_prompt?: string
-}
-
-export interface ResponsesApiResponse {
-  id?: string
-  output?: ResponsesOutputItem[]
-  tools?: Array<{
-    type?: string
-    size?: string
-    quality?: string
-    output_format?: string
-    output_compression?: number
-    moderation?: string
-    n?: number
-  }>
-}
-
 export interface FalImageFile {
   url?: string
   content_type?: string
@@ -424,7 +316,6 @@ export interface ExportData {
   tasks?: TaskRecord[]
   favoriteCollections?: FavoriteCollection[]
   defaultFavoriteCollectionId?: string | null
-  agentConversations?: AgentConversation[]
   /** imageId → 图片信息 */
   imageFiles?: Record<string, {
     path: string
@@ -440,4 +331,74 @@ export interface ExportData {
     height?: number
     thumbnailVersion?: number
   }>
+  // @deprecated Agent 功能已移除
+  agentConversations?: AgentConversation[]
+}
+
+// @deprecated Agent 功能已移除，保留类型定义用于向后兼容
+export interface AgentMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  roundId: string
+  inputImageIds?: string[]
+  maskTargetImageId?: string | null
+  maskImageId?: string | null
+  outputTaskIds?: string[]
+  createdAt: number
+}
+
+export interface AgentRound {
+  id: string
+  index: number
+  parentRoundId?: string | null
+  userMessageId: string
+  assistantMessageId?: string
+  prompt: string
+  inputImageIds: string[]
+  maskTargetImageId?: string | null
+  maskImageId?: string | null
+  outputTaskIds: string[]
+  responseId?: string
+  responseOutput?: ResponsesOutputItem[]
+  status: 'running' | 'done' | 'error'
+  error: string | null
+  createdAt: number
+  finishedAt: number | null
+}
+
+export interface AgentConversation {
+  id: string
+  title: string
+  activeRoundId?: string | null
+  createdAt: number
+  updatedAt: number
+  rounds: AgentRound[]
+  messages: AgentMessage[]
+}
+
+export interface ResponsesOutputItem {
+  id?: string
+  type?: string
+  status?: string
+  action?: string | Record<string, unknown>
+  call_id?: string
+  name?: string
+  arguments?: string
+  output?: string
+  annotations?: Array<{ type?: string; start_index?: number; end_index?: number; url?: string; title?: string }>
+  content?: Array<{ type?: string; text?: string; annotations?: Array<{ type?: string; start_index?: number; end_index?: number; url?: string; title?: string }> }>
+  result?: string | { b64_json?: string; base64?: string; image?: string; data?: string }
+  size?: string
+  quality?: string
+  output_format?: string
+  output_compression?: number
+  moderation?: string
+  revised_prompt?: string
+}
+
+export interface ResponsesApiResponse {
+  id?: string
+  output?: ResponsesOutputItem[]
+  tools?: Array<{ type?: string; size?: string; quality?: string; output_format?: string; output_compression?: number; moderation?: string; n?: number }>
 }

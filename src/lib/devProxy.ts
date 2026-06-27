@@ -60,18 +60,25 @@ export function buildApiUrl(
   proxyConfig?: DevProxyConfig | null,
   useApiProxy = false,
 ): string {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
   const endpointPath = path.replace(/^\/+/, '')
 
-  if (useApiProxy) {
+  // 锁定配置：baseUrl 固定为 Nginx 代理路径 /api-proxy，直接拼接端点，
+  // 跳过 normalizeBaseUrl 的 URL 解析（避免给代理路径补 https:// 或 /v1）。
+  if (useApiProxy || isApiProxyBaseUrl(baseUrl)) {
     return `${proxyConfig?.prefix ?? DEFAULT_PROXY_PREFIX}/${endpointPath}`
   }
 
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
   const apiPath = normalizedBaseUrl.endsWith('/v1')
     ? endpointPath
     : ['v1', endpointPath].join('/')
 
   return normalizedBaseUrl ? `${normalizedBaseUrl}/${apiPath}` : `/${apiPath}`
+}
+
+function isApiProxyBaseUrl(baseUrl: string): boolean {
+  const trimmed = baseUrl.trim()
+  return !trimmed || trimmed === DEFAULT_PROXY_PREFIX || trimmed.startsWith(`${DEFAULT_PROXY_PREFIX}/`)
 }
 
 export function resolveDevProxyConfig(input: unknown, isDev: boolean): DevProxyConfig | null {

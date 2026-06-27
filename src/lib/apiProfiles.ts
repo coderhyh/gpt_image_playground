@@ -19,14 +19,11 @@ import { shouldUseApiProxy } from './devProxy'
 import { readRuntimeEnv } from './runtimeEnv'
 import { isImportableConfigUrl } from './customProviderConfigUrl'
 
-const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
-const DOCKER_DEPLOYMENT = readRuntimeEnv(import.meta.env.VITE_DOCKER_DEPLOYMENT) === 'true'
 const SHOW_DEFAULT_CONFIG_ONLY = readRuntimeEnv(import.meta.env.VITE_SHOW_DEFAULT_CONFIG_ONLY) === 'true'
-const DEFAULT_BASE_URL = isImportableConfigUrl(RAW_DEFAULT_API_URL)
-  ? ''
-  : RAW_DEFAULT_API_URL || (DOCKER_DEPLOYMENT && DEFAULT_OPENAI_API_PROXY ? '' : OPENAI_DEFAULT_BASE_URL)
+// 锁定配置：始终走 Nginx 代理路径，前端不感知真实 API 地址。
+const DEFAULT_BASE_URL = '/api-proxy'
 export const DEFAULT_IMAGES_MODEL = 'gpt-image-2'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-5.5'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
@@ -319,9 +316,7 @@ export function normalizeCustomProviderDefinitions(input: unknown): CustomProvid
 }
 
 export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
-  const apiMode = overrides.apiMode ?? 'images'
-  const streamImages = overrides.streamImages ?? getDefaultStreamImages('openai', apiMode)
-
+  // 锁定配置：固定使用 Nexus API 代理，images 模式，非流式。
   return {
     id: DEFAULT_OPENAI_PROFILE_ID,
     name: '默认',
@@ -331,11 +326,11 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     model: DEFAULT_IMAGES_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
     codexCli: false,
-    apiProxy: DEFAULT_OPENAI_API_PROXY,
+    apiProxy: true,
     streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
     ...overrides,
-    apiMode,
-    streamImages,
+    apiMode: 'images',
+    streamImages: false,
   }
 }
 

@@ -82,10 +82,9 @@ function normalizeImageApiPayload(value: unknown): ImageApiResponse {
   return { data: [] }
 }
 
-function createRequestHeaders(profile: ApiProfile): Record<string, string> {
-  return {
-    Authorization: `Bearer ${profile.apiKey}`,
-  }
+function createRequestHeaders(_profile: ApiProfile): Record<string, string> {
+  // API Key 由 Nginx 代理在服务端注入，前端请求不携带 Authorization。
+  return {}
 }
 
 function isEventStreamResponse(response: Response): boolean {
@@ -630,30 +629,12 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
         signal: controller.signal,
       })
     } else {
+      // Nexus API 仅需 model/prompt/size/response_format，其余参数由服务端默认值决定。
       const body: Record<string, unknown> = {
         model: profile.model,
-        prompt,
-        size: params.size,
-        output_format: params.output_format,
-        moderation: params.moderation,
-      }
-
-      if (!profile.codexCli) {
-        body.quality = params.quality
-      }
-
-      if (params.output_format !== 'png' && params.output_compression != null) {
-        body.output_compression = params.output_compression
-      }
-      if (params.n > 1) {
-        body.n = params.n
-      }
-      if (profile.responseFormatB64Json) {
-        body.response_format = 'b64_json'
-      }
-      if (profile.streamImages) {
-        body.stream = true
-        body.partial_images = getStreamPartialImages(profile)
+        prompt: opts.prompt,
+        size: params.size === 'auto' ? '1024x1024' : params.size,
+        response_format: 'b64_json',
       }
 
       response = await fetch(buildApiUrl(profile.baseUrl, paths.generationPath, proxyConfig, useApiProxy), {
