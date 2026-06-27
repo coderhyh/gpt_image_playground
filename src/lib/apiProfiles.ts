@@ -22,8 +22,8 @@ import { isImportableConfigUrl } from './customProviderConfigUrl'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
 const SHOW_DEFAULT_CONFIG_ONLY = readRuntimeEnv(import.meta.env.VITE_SHOW_DEFAULT_CONFIG_ONLY) === 'true'
-// 锁定配置：始终走 Nginx 代理路径，前端不感知真实 API 地址。
-const DEFAULT_BASE_URL = '/api-proxy'
+// 从环境变量读取 API Base URL，未设置时使用默认代理路径。
+const DEFAULT_BASE_URL = RAW_DEFAULT_API_URL || '/api-proxy'
 export const DEFAULT_IMAGES_MODEL = 'gpt-image-2'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-5.5'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'

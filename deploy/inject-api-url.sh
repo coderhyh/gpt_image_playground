@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # 锁定配置：固定使用 Nginx API 代理，运行时注入 API Key。
-DEFAULT_API_URL=""
+DEFAULT_API_URL=${API_BASE_URL:-}
 API_PROXY_AVAILABLE=true
 API_PROXY_LOCKED=true
 DEFAULT_CONFIG_ONLY=true

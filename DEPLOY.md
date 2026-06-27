@@ -60,6 +60,31 @@ docker run -d \
 |------|------|------|
 | `API_KEY` | 是 | Nexus API 的 Key（`sk-...`） |
 | `API_PROXY_URL` | 否 | 上游 API 地址，默认 `https://nexus.apimf.top/v1` |
+| `API_BASE_URL` | 否 | 前端请求的 API 路径，默认 `/api-proxy`（走 Nginx 代理）。设为空字符串则用默认值 |
+
+### 修改配置（不重建镜像）
+
+Key 或 URL 变了只需重启容器，不需要重新构建：
+
+```bash
+# 改 Key
+docker rm -f image-playground
+docker run -d --name image-playground -p 80:80 \
+  -e API_KEY=*** \
+  image-playground
+
+# 改上游 API 地址
+docker rm -f image-playground
+docker run -d --name image-playground -p 80:80 \
+  -e API_KEY=*** -e API_PROXY_URL=https://新地址/v1 \
+  image-playground
+
+# 改前端请求路径
+docker rm -f image-playground
+docker run -d --name image-playground -p 80:80 \
+  -e API_KEY=*** -e API_BASE_URL=/自定义路径 \
+  image-playground
+```
 
 ---
 

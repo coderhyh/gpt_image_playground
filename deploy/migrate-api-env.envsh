@@ -10,7 +10,9 @@ if [ "${DEFAULT_API_URL+x}" != "x" ]; then
     DEFAULT_API_URL=${API_URL:-https://api.openai.com/v1}
 fi
 API_PROXY_URL=${API_PROXY_URL:-https://nexus.apimf.top/v1}
+API_BASE_URL=${API_BASE_URL:-}
 
 export DEFAULT_API_URL
 export API_PROXY_URL
+export API_BASE_URL
 export DOCKER_LEGACY_API_URL_USED
