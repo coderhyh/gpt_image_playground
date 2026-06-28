@@ -3654,8 +3654,9 @@ async function executeAgentRound(
             ],
       }))
     }
-    const maxToolCalls = Number.isFinite(requestSettings.agentMaxToolRounds)
-      ? Math.max(1, Math.trunc(requestSettings.agentMaxToolRounds))
+    const requestedToolRounds = requestSettings.agentMaxToolRounds
+    const maxToolCalls = typeof requestedToolRounds === 'number' && Number.isFinite(requestedToolRounds)
+      ? Math.max(1, Math.trunc(requestedToolRounds))
       : DEFAULT_AGENT_MAX_TOOL_ROUNDS
     let apiInputForTurn = apiInput
     let accumulatedOutputItems: ResponsesOutputItem[] = []
@@ -3871,7 +3872,7 @@ async function executeAgentRound(
                   }
                 : undefined,
               onPartialImage: shouldStreamAssistantMessage
-                ? async ({ image, partialImageIndex }) => {
+                ? async ({ image, partialImageIndex }: { image: string; partialImageIndex?: number }) => {
                     if (controller.signal.aborted) return
                     const taskId = taskIdByToolCallId.get(batchToolCallId)
                     if (taskId) {
@@ -3883,7 +3884,7 @@ async function executeAgentRound(
                   }
                 : undefined,
               onImageToolCompleted: shouldStreamAssistantMessage
-                ? async (image) => {
+                ? async (image: AgentApiResultImage) => {
                     if (controller.signal.aborted) return
                     await completeAgentImageTask({ ...image, toolCallId: batchToolCallId })
                   }
@@ -3946,7 +3947,7 @@ async function executeAgentRound(
         maskDataUrl,
         signal: controller.signal,
         onTextDelta: shouldStreamAssistantMessage
-          ? (delta) => {
+          ? (delta: string) => {
               if (controller.signal.aborted) return
               if (pendingToolTextSeparator && delta && accumulatedText.trim()) {
                 accumulatedText += '\n\n'
@@ -3958,7 +3959,7 @@ async function executeAgentRound(
             }
           : undefined,
         onOutputItems: shouldStreamAssistantMessage
-          ? (outputItems) => {
+          ? (outputItems: ResponsesOutputItem[]) => {
               if (controller.signal.aborted) return
               currentResponseOutputItems = outputItems
               updateAgentConversation(conversationId, (current) => ({
@@ -3968,13 +3969,13 @@ async function executeAgentRound(
             }
           : undefined,
         onImageToolStarted: shouldStreamAssistantMessage
-          ? async ({ toolCallId }) => {
+          ? async ({ toolCallId }: { toolCallId: string }) => {
               if (controller.signal.aborted) return
               await ensureStreamingAgentTask(toolCallId)
             }
           : undefined,
         onImagePartialImage: shouldStreamAssistantMessage
-          ? async ({ toolCallId, image, partialImageIndex }) => {
+          ? async ({ toolCallId, image, partialImageIndex }: { toolCallId: string; image: string; partialImageIndex?: number }) => {
               if (controller.signal.aborted) return
               const taskId = await ensureStreamingAgentTask(toolCallId)
               if (controller.signal.aborted) return
@@ -3985,13 +3986,13 @@ async function executeAgentRound(
             }
           : undefined,
         onImageToolCompleted: shouldStreamAssistantMessage
-          ? async (image) => {
+          ? async (image: AgentApiResultImage) => {
               if (controller.signal.aborted) return
               await completeAgentImageTask(image)
             }
           : undefined,
         onImageToolFailed: shouldStreamAssistantMessage
-          ? async ({ toolCallId, error }) => {
+          ? async ({ toolCallId, error }: { toolCallId: string; error: string }) => {
               if (controller.signal.aborted) return
               await ensureStreamingAgentTask(toolCallId)
               if (controller.signal.aborted) return
