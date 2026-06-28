@@ -377,19 +377,8 @@ function showSupportPromptForExistingLocalData(tasks: TaskRecord[]) {
   })
 }
 
-function maybeOpenSupportPrompt(previousTasks: TaskRecord[], nextTasks: TaskRecord[], taskId: string) {
-  const state = useStore.getState()
-  if (state.supportPromptDismissed || state.supportPromptOpen || state.supportPromptSkippedForImportedData) return
-
-  const previousTask = previousTasks.find((task) => task.id === taskId)
-  const nextTask = nextTasks.find((task) => task.id === taskId)
-  if (!nextTask || previousTask?.status === 'done' || nextTask.status !== 'done' || nextTask.outputImages.length === 0) return
-
-  const previousCount = countSuccessfulOutputImages(previousTasks)
-  const nextCount = countSuccessfulOutputImages(nextTasks)
-  if (previousCount <= SUPPORT_PROMPT_IMAGE_THRESHOLD && nextCount > SUPPORT_PROMPT_IMAGE_THRESHOLD) {
-    useStore.setState({ supportPromptOpen: true })
-  }
+function maybeOpenSupportPrompt(_previousTasks: TaskRecord[], _nextTasks: TaskRecord[], _taskId: string) {
+  // 赞助作者弹窗已移除，保留空函数避免改动调用方。
 }
 
 function normalizeStringArray(value: unknown): string[] {
@@ -1193,7 +1182,7 @@ export const useStore = create<AppState>()(
             confirmText: '去设置',
             cancelText: '取消',
             action: () => {
-              useStore.getState().setShowSettings(true, 'api')
+              useStore.getState().setShowSettings(true, 'general')
             },
           })
           return
@@ -1206,7 +1195,7 @@ export const useStore = create<AppState>()(
             confirmText: '去设置',
             cancelText: '取消',
             action: () => {
-              useStore.getState().setShowSettings(true, 'agent')
+              useStore.getState().setShowSettings(true, 'general')
             },
           })
           return
@@ -1218,7 +1207,7 @@ export const useStore = create<AppState>()(
           confirmText: '去设置',
           cancelText: '取消',
           action: () => {
-            useStore.getState().setShowSettings(true, 'api')
+            useStore.getState().setShowSettings(true, 'general')
           },
         })
       },

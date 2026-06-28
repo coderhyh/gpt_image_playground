@@ -2,12 +2,15 @@
 
 ## 项目概述
 
-基于 [gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 修改的 AI 图像生成工具。
+基于开源项目修改的 AI 图像生成工具，仅供个人使用。
 
 **核心改动：**
 - API Key 完全在服务端配置，前端不暴露
 - 固定使用自建 Nexus API（`https://nexus.apimf.top/v1/images/generations`）
 - 固定模型 `gpt-image-2`
+- 生图参数精简为「尺寸」+「数量」（Nexus 仅接收 model/prompt/size/response_format）
+- 设置页仅保留「习惯配置」与「数据管理」，移除 API/Agent/关于入口
+- 移除赞助作者弹窗
 - 删除 Agent 功能，只保留画廊模式
 - 删除原作者品牌信息
 
@@ -144,10 +147,25 @@ docker run -d --name image-playground -p 80:80 \
 | `index.html` | title → "Image Playground" |
 | `public/manifest.webmanifest` | name → "Image Playground" |
 | `src/components/Header.tsx` | 标题从 "GPT Image Playground" 链接 → 纯文字 "Image Playground" |
-| `src/components/HelpModal.tsx` | 移除 @CookSleep GitHub 页脚 |
+| `src/components/HelpModal.tsx` | 移除 GitHub 页脚 |
 | `src/components/SettingsModal.tsx` | About 页替换为简洁版本 |
-| `src/components/SupportPromptModal.tsx` | Issues 链接置空 |
+| `src/components/SupportPromptModal.tsx` | 赞助弹窗（→ 第二轮已删除） |
 | `src/hooks/useVersionCheck.ts` | 禁用 GitHub 版本检查 |
+
+### 🧹 界面与文档精简（第二轮）
+
+| 文件 | 改动 |
+|------|------|
+| `src/components/input/inputParamsPanel.tsx` | 参数面板精简为「尺寸」+「数量」，移除质量/格式/审核/透明背景/压缩率控件 |
+| `src/components/InputBar.tsx` | 桌面参数列数 `grid-cols-6 → grid-cols-2`，精简面板传参；修复代理模式下发送按钮误判「未完成 API 配置」 |
+| `src/lib/apiProfiles.ts` | `validateApiProfile` 在走代理时豁免 apiKey 检查（Key 由服务端注入，前端为空） |
+| `src/components/SettingsModal.tsx` | 移除「API 配置 / Agent 配置 / 关于」三个 tab，默认打开「习惯配置」 |
+| `src/App.tsx` | 移除赞助弹窗 `SupportPromptModal` 的引用 |
+| `src/store.ts` | 禁用「生成 50 张后弹赞助」触发；Agent 引导 tab 改为 `general` |
+| `src/components/SupportPromptModal.tsx` | **删除**（原赞助作者弹窗，第一轮仅置空链接，本轮直接删文件） |
+| `README.md` | 重写为精简版，移除原作者信息、赞助商与在线体验链接 |
+| `RELEASE.md` | **删除** |
+| `docs/custom-provider-llm-prompt.md`、`docs/images/*` | **删除**（自定义服务商已下线、截图不再使用） |
 
 ---
 

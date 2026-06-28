@@ -710,7 +710,7 @@ export default function InputBar() {
       ? settings
       : normalizeSettings({ ...settings, activeProfileId: activeProfile.id })
   ), [activeProfile.id, settingsActiveProfile.id, settings])
-  const hasSubmitApiConfig = Boolean(activeProfile.apiKey)
+  const hasSubmitApiConfig = Boolean(activeProfile.apiKey) || activeProfile.apiProxy
   const canSubmit = Boolean(prompt.trim() && hasSubmitApiConfig && !activeAgentIsRunning)
   const submitButtonAriaLabel = activeAgentIsRunning
     ? '停止生成'
@@ -1886,26 +1886,8 @@ export default function InputBar() {
   const renderParams = (cols: string) => (
     <InputParamsPanel
       cols={cols}
-      params={params}
-      setParams={setParams}
-      activeProfile={activeProfile}
-      isFalProvider={isFalProvider}
       isFalTextToImage={isFalTextToImage}
       displaySize={displaySize}
-      qualityOptions={qualityOptions}
-      selectClass={selectClass}
-      transparentOutputAvailable={transparentOutputAvailable}
-      showTransparentOutputControl={showTransparentOutputControl}
-      transparentOutputEnabled={transparentOutputEnabled}
-      transparentOutputHint={transparentOutputHint}
-      onTransparentOutputMenuOpenChange={handleTransparentOutputMenuOpenChange}
-      compressionHint={compressionHint}
-      compressionDisabled={compressionDisabled}
-      outputCompressionInput={outputCompressionInput}
-      setOutputCompressionInput={setOutputCompressionInput}
-      commitOutputCompression={commitOutputCompression}
-      moderationHint={moderationHint}
-      moderationDisabled={moderationDisabled}
       agentAutoImageCount={agentAutoImageCount}
       outputImageLimit={outputImageLimit}
       nInput={nInput}
@@ -1922,7 +1904,6 @@ export default function InputBar() {
       streamConcurrentByN={streamConcurrentByN}
       streamConcurrentHint={streamConcurrentHint}
       sizeHint={sizeHint}
-      qualityHint={qualityHint}
       onOpenSizePicker={() => setShowSizePicker(true)}
     />
   )
