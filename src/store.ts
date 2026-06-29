@@ -1757,7 +1757,9 @@ function usesConcurrentOpenAIImageRequests(profile: ApiProfile, params: TaskPara
   const n = params.n > 0 ? params.n : 1
   if (profile.provider !== 'openai' || n <= 1) return false
   if (profile.apiMode === 'responses') return true
-  return profile.apiMode === 'images' && (profile.codexCli || profile.streamImages)
+  // images 模式 n>1 时统一走并发（须与 callImagesApi 的并发触发条件保持一致，
+  // 否则此处会误判为单请求并为并发任务设置单次超时 watchdog）
+  return profile.apiMode === 'images'
 }
 
 export function taskHasOutputErrors(task: Pick<TaskRecord, 'outputErrors'>) {

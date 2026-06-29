@@ -488,7 +488,10 @@ export async function callOpenAICompatibleImageApi(opts: CallApiOptions, profile
 
 async function callImagesApi(opts: CallApiOptions, profile: ApiProfile): Promise<CallApiResult> {
   const n = opts.params.n > 0 ? opts.params.n : 1
-  if ((profile.codexCli || (profile.streamImages && n > 1)) && n > 1) {
+  if (n > 1) {
+    // 多数 OpenAI 兼容接口不支持数量参数 n（会被忽略只返回 1 张），
+    // n>1 时改为并发发起 n 个单图请求，由 callImagesApiConcurrent 用
+    // Promise.allSettled 管理，支持部分成功。
     return callImagesApiConcurrent(opts, profile, n)
   }
 

@@ -4,7 +4,7 @@ import { createDefaultFalProfile, createDefaultOpenAIProfile, DEFAULT_SETTINGS, 
 import { getOutputImageLimitForSettings, normalizeParamsForSettings } from './paramCompatibility'
 
 describe('parameter compatibility', () => {
-  it('limits OpenAI output count to 10', () => {
+  it('limits OpenAI output count to 5', () => {
     const openAIProfile = createDefaultOpenAIProfile({ apiKey: 'test-key', streamImages: false })
     const settings = normalizeSettings({
       ...DEFAULT_SETTINGS,
@@ -12,8 +12,8 @@ describe('parameter compatibility', () => {
       activeProfileId: openAIProfile.id,
     })
 
-    expect(getOutputImageLimitForSettings(settings)).toBe(10)
-    expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, n: 12 }, settings).n).toBe(10)
+    expect(getOutputImageLimitForSettings(settings)).toBe(5)
+    expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, n: 12 }, settings).n).toBe(5)
   })
 
   it('limits fal.ai output count to 4', () => {
