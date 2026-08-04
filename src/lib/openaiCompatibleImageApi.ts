@@ -571,30 +571,13 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
     let response: Response
 
     if (isEdit) {
+      // Fusecode 接口仅需 model/prompt/size/n/response_format
       const formData = new FormData()
       formData.append('model', profile.model)
       formData.append('prompt', prompt)
-      formData.append('size', params.size)
-      formData.append('output_format', params.output_format)
-      formData.append('moderation', params.moderation)
-
-      if (!profile.codexCli) {
-        formData.append('quality', params.quality)
-      }
-
-      if (params.output_format !== 'png' && params.output_compression != null) {
-        formData.append('output_compression', String(params.output_compression))
-      }
-      if (params.n > 1) {
-        formData.append('n', String(params.n))
-      }
-      if (profile.responseFormatB64Json) {
-        formData.append('response_format', 'b64_json')
-      }
-      if (profile.streamImages) {
-        formData.append('stream', 'true')
-        formData.append('partial_images', String(getStreamPartialImages(profile)))
-      }
+      formData.append('size', params.size === 'auto' ? '1024x1024' : params.size)
+      formData.append('n', String(params.n > 0 ? params.n : 1))
+      formData.append('response_format', 'b64_json')
 
       const imageBlobs: Blob[] = []
       for (let i = 0; i < inputImageDataUrls.length; i++) {
@@ -632,11 +615,12 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
         signal: controller.signal,
       })
     } else {
-      // Nexus API 仅需 model/prompt/size/response_format，其余参数由服务端默认值决定。
+      // Fusecode 接口仅需 model/prompt/size/n/response_format
       const body: Record<string, unknown> = {
         model: profile.model,
         prompt: opts.prompt,
         size: params.size === 'auto' ? '1024x1024' : params.size,
+        n: params.n > 0 ? params.n : 1,
         response_format: 'b64_json',
       }
 
