@@ -30,6 +30,9 @@ export default function InputParamsPanel({
   streamConcurrentHint,
   sizeHint,
   onOpenSizePicker,
+  quality,
+  qualityOptions,
+  onQualityChange,
 }: {
   cols: string
   isFalTextToImage: boolean
@@ -51,9 +54,11 @@ export default function InputParamsPanel({
   streamConcurrentHint: HintTooltipState
   sizeHint: HintTooltipState
   onOpenSizePicker: () => void
+  quality: string
+  qualityOptions: Array<{ label: string; value: string }>
+  onQualityChange: (value: string) => void
 }) {
-  // 仅保留「尺寸」与「数量」：Nexus gpt-image-2 接口只接收 model/prompt/size/response_format，
-  // 质量、格式、审核、透明背景、压缩率等参数服务端不读取，故不再暴露给用户。
+  // 「尺寸」「质量」「数量」：PackyAPI gpt-image-2 接收 model/prompt/size/quality/output_format/response_format/n。
   return (
     <div className={`grid ${cols} gap-2 text-xs flex-1`}>
       <label
@@ -78,6 +83,18 @@ export default function InputParamsPanel({
           visible={isFalTextToImage && sizeHint.visible}
           text={<>fal.ai 的文生图模式不支持 <code className="rounded bg-white/10 px-1 py-0.5 font-mono">auto</code> 参数</>}
         />
+      </label>
+      <label className="relative flex flex-col gap-0.5">
+        <span className="text-gray-400 dark:text-gray-500 ml-1">质量</span>
+        <select
+          value={quality}
+          onChange={(e) => onQualityChange(e.target.value)}
+          className="px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.03] focus:outline-none text-xs transition-all duration-200 shadow-sm font-mono"
+        >
+          {qualityOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
       </label>
       <label
         className="relative flex flex-col gap-0.5"

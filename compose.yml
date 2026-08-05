@@ -9,6 +9,6 @@ services:
       - "7789:80"
     environment:
       API_KEY: ${API_KEY}
-      # 默认上游为 https://nexus.apimf.top/v1，如需更换再取消下行注释
-      # API_PROXY_URL: https://nexus.apimf.top/v1
+      # 上游 API 地址，不配置默认 https://www.packyapi.ai/v1（PackyAPI gpt-image-2）
+      API_PROXY_URL: ${API_PROXY_URL:-https://www.packyapi.ai/v1}
     restart: unless-stopped

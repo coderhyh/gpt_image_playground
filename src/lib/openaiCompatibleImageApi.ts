@@ -571,13 +571,15 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
     let response: Response
 
     if (isEdit) {
-      // Fusecode 接口仅需 model/prompt/size/n/response_format
+      // PackyAPI images/edits：model/prompt/size/quality/output_format/response_format/n + image/mask
       const formData = new FormData()
       formData.append('model', profile.model)
       formData.append('prompt', prompt)
-      formData.append('size', params.size === 'auto' ? '1024x1024' : params.size)
-      formData.append('n', String(params.n > 0 ? params.n : 1))
-      formData.append('response_format', 'b64_json')
+      formData.append('size', params.size)
+      formData.append('quality', params.quality)
+      formData.append('output_format', params.output_format)
+      formData.append('response_format', 'url')
+      formData.append('n', '1')
 
       const imageBlobs: Blob[] = []
       for (let i = 0; i < inputImageDataUrls.length; i++) {
@@ -615,13 +617,15 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
         signal: controller.signal,
       })
     } else {
-      // Fusecode 接口仅需 model/prompt/size/n/response_format
+      // PackyAPI images/generations：model/prompt/size/quality/output_format/response_format/n
       const body: Record<string, unknown> = {
         model: profile.model,
         prompt: opts.prompt,
-        size: params.size === 'auto' ? '1024x1024' : params.size,
-        n: params.n > 0 ? params.n : 1,
-        response_format: 'b64_json',
+        size: params.size,
+        quality: params.quality,
+        output_format: params.output_format,
+        response_format: 'url',
+        n: 1,
       }
 
       response = await fetch(buildApiUrl(profile.baseUrl, paths.generationPath, proxyConfig, useApiProxy), {
