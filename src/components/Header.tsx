@@ -6,6 +6,7 @@ import { dismissAllTooltips } from '../lib/tooltipDismiss'
 import ViewportTooltip from './ViewportTooltip'
 import HelpModal from './HelpModal'
 import { useFavoriteCollectionTitle } from './FavoriteCollections'
+import UsageBadge from './UsageBadge'
 import { HelpCircleIcon, InstallIcon, SettingsIcon } from './icons'
 
 type BeforeInstallPromptEvent = Event & {
@@ -158,6 +159,7 @@ export default function Header() {
             </div>
           )}
           <div className="flex items-center gap-1 shrink-0">
+            <UsageBadge />
             {!isPwaInstalled && (
               <div
                 className="relative"

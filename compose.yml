@@ -11,4 +11,7 @@ services:
       API_KEY: ${API_KEY}
       # 上游 API 地址，不配置默认 https://www.packyapi.ai/v1（PackyAPI gpt-image-2）
       API_PROXY_URL: ${API_PROXY_URL:-https://www.packyapi.ai/v1}
+      # PackyAPI 用量查询（可选）：系统访问令牌 + 用户 ID，不配则右上角不显示额度
+      PACKY_ACCESS_TOKEN: ${PACKY_ACCESS_TOKEN:-}
+      PACKY_USER_ID: ${PACKY_USER_ID:-}
     restart: unless-stopped

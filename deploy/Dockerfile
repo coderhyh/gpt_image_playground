@@ -28,6 +28,8 @@ ENV API_KEY=
 ENV ENABLE_API_PROXY=false
 ENV LOCK_API_PROXY=false
 ENV SHOW_DEFAULT_CONFIG_ONLY=false
+ENV PACKY_ACCESS_TOKEN=
+ENV PACKY_USER_ID=
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY deploy/nginx.conf /etc/nginx/templates/default.conf.template
