@@ -571,14 +571,13 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
     let response: Response
 
     if (isEdit) {
-      // PackyAPI images/edits：model/prompt/size/quality/output_format/response_format/n + image/mask
+      // PackyAPI images/edits：model/prompt/size/quality/output_format/n + image/mask
       const formData = new FormData()
       formData.append('model', profile.model)
       formData.append('prompt', prompt)
       formData.append('size', params.size)
       formData.append('quality', params.quality)
       formData.append('output_format', params.output_format)
-      formData.append('response_format', 'url')
       formData.append('n', '1')
 
       const imageBlobs: Blob[] = []
@@ -617,14 +616,13 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
         signal: controller.signal,
       })
     } else {
-      // PackyAPI images/generations：model/prompt/size/quality/output_format/response_format/n
+      // PackyAPI images/generations：model/prompt/size/quality/output_format/n
       const body: Record<string, unknown> = {
         model: profile.model,
         prompt: opts.prompt,
         size: params.size,
         quality: params.quality,
         output_format: params.output_format,
-        response_format: 'url',
         n: 1,
       }
 

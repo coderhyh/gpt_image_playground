@@ -58,7 +58,7 @@ export default function InputParamsPanel({
   qualityOptions: Array<{ label: string; value: string }>
   onQualityChange: (value: string) => void
 }) {
-  // 「尺寸」「质量」「数量」：PackyAPI gpt-image-2 接收 model/prompt/size/quality/output_format/response_format/n。
+  // 「尺寸」「质量」「数量」：PackyAPI gpt-image-2 接收 model/prompt/size/quality/output_format/n。
   return (
     <div className={`grid ${cols} gap-2 text-xs flex-1`}>
       <label
