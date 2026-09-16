@@ -7,7 +7,7 @@
 **核心改动：**
 - API Key 完全在服务端配置，前端不暴露
 - 固定使用自建 Nexus API（`https://nexus.apimf.top/v1/images/generations`）
-- 固定模型 `gpt-image-2`
+- 固定模型 `gpt-image-2.5`
 - 生图参数精简为「尺寸」+「数量」（Nexus 仅接收 model/prompt/size/response_format）
 - 设置页仅保留「习惯配置」与「数据管理」，移除 API/Agent/关于入口
 - 移除赞助作者弹窗

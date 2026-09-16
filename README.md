@@ -1,10 +1,10 @@
 # Image Playground
 
-基于 `gpt-image-2` 的 AI 图像生成画廊。纯前端 SPA，API Key 在服务端注入，前端不暴露。
+基于 `gpt-image-2.5` 的 AI 图像生成画廊。纯前端 SPA，API Key 在服务端注入，前端不暴露。
 
 ## 特性
 
-- 输入提示词生成图片，固定模型 `gpt-image-2`
+- 输入提示词生成图片，固定模型 `gpt-image-2.5`
 - 画廊式历史记录，支持收藏、批量下载
 - 参考图与遮罩编辑
 - 数据纯本地化（IndexedDB），不上传服务器

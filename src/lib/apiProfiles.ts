@@ -24,10 +24,10 @@ const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_A
 const SHOW_DEFAULT_CONFIG_ONLY = readRuntimeEnv(import.meta.env.VITE_SHOW_DEFAULT_CONFIG_ONLY) === 'true'
 // 从环境变量读取 API Base URL，未设置时使用默认代理路径。
 const DEFAULT_BASE_URL = RAW_DEFAULT_API_URL || '/api-proxy'
-export const DEFAULT_IMAGES_MODEL = 'gpt-image-2'
+export const DEFAULT_IMAGES_MODEL = 'gpt-image-2.5'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-5.5'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
-export const DEFAULT_FAL_MODEL = 'openai/gpt-image-2'
+export const DEFAULT_FAL_MODEL = 'openai/gpt-image-2.5'
 export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
 export const DEFAULT_API_TIMEOUT = 600
 
