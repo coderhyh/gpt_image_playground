@@ -51,7 +51,7 @@ describe('parameter compatibility', () => {
     expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, size: 'auto' }, settings, { hasInputImages: true }).size).toBe('auto')
   })
 
-  it('replaces Right Code auto size with 1024x1024', () => {
+  it('keeps Right Code auto size so the model decides the resolution', () => {
     const rightProfile = createDefaultRightDrawProfile()
     const settings = normalizeSettings({
       ...DEFAULT_SETTINGS,
@@ -59,7 +59,7 @@ describe('parameter compatibility', () => {
       activeProfileId: rightProfile.id,
     })
 
-    expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, size: 'auto' }, settings).size).toBe('1024x1024')
+    expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, size: 'auto' }, settings).size).toBe('auto')
     expect(normalizeParamsForSettings({ ...DEFAULT_PARAMS, size: '1792x1024' }, settings).size).toBe('1792x1024')
   })
 })
