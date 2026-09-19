@@ -40,7 +40,7 @@ export const RIGHT_DRAW_PROVIDER_ID = 'right-draw'
 // baseUrl 以 /draw 结尾：buildApiUrl 会经 normalizeBaseUrl 补全为 /draw/v1，
 // 再拼上标准 OpenAI 端点 images/generations，得到 /draw/v1/images/generations。
 export const DEFAULT_RIGHT_DRAW_BASE_URL = 'https://www.right.codes/draw'
-export const DEFAULT_RIGHT_DRAW_MODEL = 'nano-banana-fast'
+export const DEFAULT_RIGHT_DRAW_MODEL = 'gpt-image-2-vip'
 // 内置服务商定义只在运行时使用，不写入 settings.customProviders，
 // 因此 submit 的 path 不会经过 normalizeProviderPath 的 v1/ 前缀裁剪。
 export const BUILT_IN_RIGHT_DRAW_PROVIDER: CustomProviderDefinition = {
