@@ -82,9 +82,11 @@ function normalizeImageApiPayload(value: unknown): ImageApiResponse {
   return { data: [] }
 }
 
-function createRequestHeaders(_profile: ApiProfile): Record<string, string> {
-  // API Key 由 Nginx 代理在服务端注入，前端请求不携带 Authorization。
-  return {}
+function createRequestHeaders(profile: ApiProfile): Record<string, string> {
+  // 走 API 代理时由 Nginx 在服务端注入 Authorization；直连时由前端携带 API Key。
+  if (shouldUseApiProxy(profile.apiProxy, readClientDevProxyConfig())) return {}
+  const apiKey = profile.apiKey.trim()
+  return apiKey ? { Authorization: `Bearer ${apiKey}` } : {}
 }
 
 function isEventStreamResponse(response: Response): boolean {

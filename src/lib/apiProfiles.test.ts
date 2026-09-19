@@ -4,6 +4,7 @@ import {
   DEFAULT_FAL_MODEL,
   DEFAULT_IMAGES_MODEL,
   DEFAULT_OPENAI_PROFILE_ID,
+  DEFAULT_RIGHT_DRAW_BASE_URL,
   DEFAULT_RIGHT_DRAW_MODEL,
   DEFAULT_RIGHT_DRAW_PROFILE_ID,
   DEFAULT_SETTINGS,
@@ -556,7 +557,7 @@ describe('custom providers', () => {
     const profile = switchApiProfileProvider(createDefaultFalProfile(), provider.id, provider)
 
     expect(profile.provider).toBe(provider.id)
-    expect(profile.baseUrl).toBe(DEFAULT_SETTINGS.baseUrl)
+    expect(profile.baseUrl).toBe('/api-proxy')
     expect(profile.model).toBe(DEFAULT_IMAGES_MODEL)
   })
 
@@ -697,7 +698,8 @@ describe('right-draw provider', () => {
     const profile = getActiveApiProfile(DEFAULT_SETTINGS)
     expect(profile.provider).toBe(RIGHT_DRAW_PROVIDER_ID)
     expect(profile.model).toBe(DEFAULT_RIGHT_DRAW_MODEL)
-    expect(profile.baseUrl).toBe('/api-proxy')
+    expect(profile.baseUrl).toBe(DEFAULT_RIGHT_DRAW_BASE_URL)
+    expect(profile.apiProxy).toBe(false)
     expect(profile.apiMode).toBe('images')
     expect(profile.streamImages).toBe(false)
   })
@@ -705,7 +707,7 @@ describe('right-draw provider', () => {
   it('falls back to the built-in Right Code provider definition', () => {
     const provider = getCustomProviderDefinition(DEFAULT_SETTINGS, RIGHT_DRAW_PROVIDER_ID)
     expect(provider?.name).toBe('Right Code 画图')
-    expect(provider?.submit.path).toBe('draw/v1/images/generations')
+    expect(provider?.submit.path).toBe('images/generations')
     expect(provider?.submit.taskIdPath).toBeUndefined()
     expect(provider?.poll).toBeUndefined()
   })

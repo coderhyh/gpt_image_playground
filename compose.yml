@@ -8,9 +8,9 @@ services:
     ports:
       - "7767:80"
     environment:
-      API_KEY: ${API_KEY}
-      # 上游 API 地址，不配置默认 https://www.right.codes（Right Code 同步画图接口）
-      API_PROXY_URL: ${API_PROXY_URL:-https://www.right.codes}
+      # 纯前端直连上游，无需在服务器配置 API Key；Key 由各用户在网页设置中填写
+      # 可选：自定义上游地址（默认 https://www.right.codes/draw，需以 /draw 结尾）
+      # API_DEFAULT_URL: https://www.right.codes/draw
       # PackyAPI 用量查询（可选）：系统访问令牌 + 用户 ID，不配则右上角不显示额度
       PACKY_ACCESS_TOKEN: ${PACKY_ACCESS_TOKEN:-}
       PACKY_USER_ID: ${PACKY_USER_ID:-}

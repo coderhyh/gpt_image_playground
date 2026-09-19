@@ -32,10 +32,14 @@ export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
 export const DEFAULT_RIGHT_DRAW_PROFILE_ID = 'default-right-draw'
 export const DEFAULT_API_TIMEOUT = 600
 
-// Right Code（right.codes）同步画图：POST {base}/draw/v1/images/generations，
+// Right Code（right.codes）同步画图：POST {base}/v1/images/generations，
 // 不带 async 参数时请求阻塞等待，完成后直接返回 OpenAI Images 形状
 // {created, data: [{url}]}；参考图通过 JSON body 的 image 数组（data URL）传入。
+// 纯前端直连部署：浏览器直接请求上游（上游已开启 CORS），API Key 由用户在前端填写。
 export const RIGHT_DRAW_PROVIDER_ID = 'right-draw'
+// baseUrl 以 /draw 结尾：buildApiUrl 会经 normalizeBaseUrl 补全为 /draw/v1，
+// 再拼上标准 OpenAI 端点 images/generations，得到 /draw/v1/images/generations。
+export const DEFAULT_RIGHT_DRAW_BASE_URL = 'https://www.right.codes/draw'
 export const DEFAULT_RIGHT_DRAW_MODEL = 'nano-banana-fast'
 // 内置服务商定义只在运行时使用，不写入 settings.customProviders，
 // 因此 submit 的 path 不会经过 normalizeProviderPath 的 v1/ 前缀裁剪。
@@ -44,7 +48,7 @@ export const BUILT_IN_RIGHT_DRAW_PROVIDER: CustomProviderDefinition = {
   name: 'Right Code 画图',
   template: 'http-image',
   submit: {
-    path: 'draw/v1/images/generations',
+    path: 'images/generations',
     method: 'POST',
     contentType: 'json',
     body: {
@@ -382,18 +386,18 @@ export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): Ap
   }
 }
 
-// 锁定配置：默认走 Nginx API 代理 + Right Code 画图接口。
+// 锁定配置：默认直连 Right Code 画图接口（纯前端请求，Key 由用户在前端填写）。
 export function createDefaultRightDrawProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
   return {
     id: DEFAULT_RIGHT_DRAW_PROFILE_ID,
     name: '默认',
     provider: RIGHT_DRAW_PROVIDER_ID,
-    baseUrl: DEFAULT_BASE_URL,
+    baseUrl: DEFAULT_RIGHT_DRAW_BASE_URL,
     apiKey: '',
     model: DEFAULT_RIGHT_DRAW_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
     codexCli: false,
-    apiProxy: true,
+    apiProxy: DEFAULT_OPENAI_API_PROXY,
     streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
     ...overrides,
     apiMode: 'images',
@@ -437,7 +441,7 @@ export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvi
     return {
       ...profile,
       provider,
-      baseUrl: savedDraft?.baseUrl ?? DEFAULT_BASE_URL,
+      baseUrl: savedDraft?.baseUrl ?? DEFAULT_RIGHT_DRAW_BASE_URL,
       model: savedDraft?.model ?? DEFAULT_RIGHT_DRAW_MODEL,
       apiMode: 'images',
       codexCli: false,
@@ -771,13 +775,13 @@ function isDefaultRightDrawProfile(profile: ApiProfile): boolean {
   return profile.id === DEFAULT_RIGHT_DRAW_PROFILE_ID &&
     profile.name === '默认' &&
     profile.provider === RIGHT_DRAW_PROVIDER_ID &&
-    profile.baseUrl === DEFAULT_BASE_URL &&
+    profile.baseUrl === DEFAULT_RIGHT_DRAW_BASE_URL &&
     profile.apiKey === '' &&
     profile.model === DEFAULT_RIGHT_DRAW_MODEL &&
     profile.timeout === DEFAULT_API_TIMEOUT &&
     profile.apiMode === 'images' &&
     profile.codexCli === false &&
-    profile.apiProxy === true &&
+    profile.apiProxy === DEFAULT_OPENAI_API_PROXY &&
     profile.streamImages === false &&
     profile.streamPartialImages === DEFAULT_STREAM_PARTIAL_IMAGES
 }

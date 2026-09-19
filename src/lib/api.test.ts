@@ -971,8 +971,7 @@ describe('callImageApi', () => {
 })
 
 describe('built-in Right Code draw provider', () => {
-  it('submits a sync json request and extracts the result image', async () => {
-    vi.stubEnv('VITE_API_PROXY_AVAILABLE', 'true')
+  it('submits a sync json request directly to the upstream and extracts the result image', async () => {
     const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47])
     const fetchMock = vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(JSON.stringify({
@@ -982,7 +981,11 @@ describe('built-in Right Code draw provider', () => {
       .mockResolvedValueOnce(new Response(pngBytes, { status: 200, headers: { 'Content-Type': 'image/png' } }))
 
     const result = await callImageApi({
-      settings: { ...DEFAULT_SETTINGS, profiles: [createDefaultRightDrawProfile()] },
+      settings: {
+        ...DEFAULT_SETTINGS,
+        apiKey: 'test-key',
+        profiles: [createDefaultRightDrawProfile({ apiKey: 'test-key' })],
+      },
       prompt: 'prompt',
       params: { ...DEFAULT_PARAMS, size: '1024x1024', n: 2 },
       inputImageDataUrls: [],
@@ -990,8 +993,11 @@ describe('built-in Right Code draw provider', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
     const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toBe('/api-proxy/draw/v1/images/generations')
+    expect(url).toBe('https://www.right.codes/draw/v1/images/generations')
     expect((init as RequestInit).method).toBe('POST')
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer test-key',
+    })
     expect(JSON.parse(String((init as RequestInit).body))).toEqual({
       model: DEFAULT_RIGHT_DRAW_MODEL,
       prompt: 'prompt',

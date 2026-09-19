@@ -5,11 +5,11 @@
 基于开源项目修改的 AI 图像生成工具，仅供个人使用。
 
 **核心改动：**
-- API Key 完全在服务端配置，前端不暴露
+- 纯前端直连上游：浏览器直接请求 Right Code API（上游已开启 CORS），服务器不存 API Key
+- API Key 由各用户在网页「设置」中填写一次，保存在各自浏览器本地
 - 默认使用 Right Code 画图接口（`https://www.right.codes/draw/v1/images/generations`，同步等待直接返回图片）
 - 默认模型 `nano-banana-fast`（可在设置中修改）
 - 生图参数精简为「尺寸」+「数量」
-- 设置页仅保留「习惯配置」与「数据管理」，移除 API/Agent/关于入口
 - 移除赞助作者弹窗
 - 删除 Agent 功能，只保留画廊模式
 - 删除原作者品牌信息
@@ -39,23 +39,22 @@ docker run -d \
 
 ### 3. 访问
 
-打开浏览器访问 `http://你的服务器IP:7767`，即可直接使用，无需任何配置。
+打开浏览器访问 `http://你的服务器IP:7767`，首次使用在右上角「设置」里填入 Right Code 的 API Key（`sk-...`）即可。
 
 ---
 
 ## 架构说明
 
 ```
-浏览器 ──→ Nginx (:7767→80) ──→ Right Code API
-                │              (www.right.codes)
-                │ 注入 Authorization: Bearer $API_KEY
-                │
-                └── 静态文件 (dist/)
+浏览器 ──直连──→ Right Code API (www.right.codes，Cloudflare)
+   │              请求头 Authorization: Bearer <用户填写的Key>
+   │
+   └──→ Nginx (:7767→80)：仅提供静态文件 + /usage-proxy 额度查询代理
 ```
 
-- **前端**：React SPA，画图走 `/api-proxy/draw/v1/images/generations`（同步等待返回图片 URL）
-- **Nginx**：代理 `/api-proxy/` → `https://www.right.codes/`，同时注入 API Key
-- **API Key**：仅存在于服务器环境变量，前端 JS 代码中不包含
+- **前端**：React SPA，画图请求 `https://www.right.codes/draw/v1/images/generations`（同步等待返回图片 URL），由用户浏览器直接发起，不经过服务器
+- **Nginx**：不再代理生图请求，只托管静态文件；`/usage-proxy/` 仍由服务端注入 PackyAPI 令牌查询额度
+- **API Key**：保存在各用户浏览器 localStorage 中，服务器与前端 JS 产物中都不包含
 
 ---
 
@@ -63,31 +62,17 @@ docker run -d \
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `API_KEY` | 是 | Right Code 的 Key（`sk-...`） |
-| `API_PROXY_URL` | 否 | 上游 API 地址，默认 `https://www.right.codes` |
-| `API_BASE_URL` | 否 | 前端请求的 API 路径，默认 `/api-proxy`（走 Nginx 代理）。设为空字符串则用默认值 |
+| `API_DEFAULT_URL` | 否 | 上游 API 地址，默认 `https://www.right.codes/draw`（需以 `/draw` 结尾），启动时注入前端 |
+| `PACKY_ACCESS_TOKEN` / `PACKY_USER_ID` | 否 | PackyAPI 用量查询（右上角额度显示），不配则不显示 |
 
-### 修改配置（不重建镜像）
+### 修改配置
 
-Key 或 URL 变了只需重启容器，不需要重新构建：
+上游地址变了只需改 `compose.yml` 中 `API_DEFAULT_URL`（或 `docker run -e`）后重启容器：
 
 ```bash
-# 改 Key
 docker rm -f image-playground-shunfeng
 docker run -d --name image-playground-shunfeng -p 7767:80 \
-  -e API_KEY=*** \
-  image-playground-shunfeng
-
-# 改上游 API 地址
-docker rm -f image-playground-shunfeng
-docker run -d --name image-playground-shunfeng -p 7767:80 \
-  -e API_KEY=*** -e API_PROXY_URL=https://新地址 \
-  image-playground-shunfeng
-
-# 改前端请求路径
-docker rm -f image-playground-shunfeng
-docker run -d --name image-playground-shunfeng -p 7767:80 \
-  -e API_KEY=*** -e API_BASE_URL=/自定义路径 \
+  -e API_DEFAULT_URL=https://新地址/draw \
   image-playground-shunfeng
 ```
 
