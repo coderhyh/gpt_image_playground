@@ -36,7 +36,7 @@ export const DEFAULT_API_TIMEOUT = 600
 // 不带 async 参数时请求阻塞等待，完成后直接返回 OpenAI Images 形状
 // {created, data: [{url}]}；参考图通过 JSON body 的 image 数组（data URL）传入。
 export const RIGHT_DRAW_PROVIDER_ID = 'right-draw'
-export const DEFAULT_RIGHT_DRAW_MODEL = 'nano-banana-fast'
+export const DEFAULT_RIGHT_DRAW_MODEL = 'gpt-image-2-vip'
 // 内置服务商定义只在运行时使用，不写入 settings.customProviders，
 // 因此 submit 的 path 不会经过 normalizeProviderPath 的 v1/ 前缀裁剪。
 export const BUILT_IN_RIGHT_DRAW_PROVIDER: CustomProviderDefinition = {
