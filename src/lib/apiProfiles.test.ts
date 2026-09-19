@@ -4,10 +4,15 @@ import {
   DEFAULT_FAL_MODEL,
   DEFAULT_IMAGES_MODEL,
   DEFAULT_OPENAI_PROFILE_ID,
+  DEFAULT_RIGHT_DRAW_MODEL,
+  DEFAULT_RIGHT_DRAW_PROFILE_ID,
   DEFAULT_SETTINGS,
+  RIGHT_DRAW_PROVIDER_ID,
   createDefaultOpenAIProfile,
   createDefaultFalProfile,
+  createDefaultRightDrawProfile,
   getActiveApiProfile,
+  getCustomProviderDefinition,
   findEquivalentApiProfile,
   importCustomProviderDefinitionFromJson,
   importCustomProviderSettingsFromJson,
@@ -616,7 +621,7 @@ describe('custom providers', () => {
       ],
     })
 
-    expect(settings.providerOrder).toEqual(['fal', 'openai', 'custom-alpha', 'custom-beta'])
+    expect(settings.providerOrder).toEqual(['fal', 'openai', RIGHT_DRAW_PROVIDER_ID, 'custom-alpha', 'custom-beta'])
   })
 
   it('keeps active custom providers in Images API mode when legacy apiMode is responses', () => {
@@ -682,5 +687,68 @@ describe('custom providers', () => {
     expect(restoredProfile.baseUrl).toBe('https://api.compat.example.com/v1')
     expect(restoredProfile.model).toBe('custom-openai-model')
     expect(restoredProfile.apiProxy).toBe(false)
+  })
+})
+
+describe('right-draw provider', () => {
+  it('uses the built-in Right Code draw profile as the default profile', () => {
+    expect(DEFAULT_SETTINGS.activeProfileId).toBe(DEFAULT_RIGHT_DRAW_PROFILE_ID)
+
+    const profile = getActiveApiProfile(DEFAULT_SETTINGS)
+    expect(profile.provider).toBe(RIGHT_DRAW_PROVIDER_ID)
+    expect(profile.model).toBe(DEFAULT_RIGHT_DRAW_MODEL)
+    expect(profile.baseUrl).toBe('/api-proxy')
+    expect(profile.apiMode).toBe('images')
+    expect(profile.streamImages).toBe(false)
+  })
+
+  it('falls back to the built-in Right Code provider definition', () => {
+    const provider = getCustomProviderDefinition(DEFAULT_SETTINGS, RIGHT_DRAW_PROVIDER_ID)
+    expect(provider?.name).toBe('Right Code 画图')
+    expect(provider?.submit.path).toBe('draw/v1/images/generations')
+    expect(provider?.submit.taskIdPath).toBeUndefined()
+    expect(provider?.poll).toBeUndefined()
+  })
+
+  it('keeps the Right Code provider when normalizing settings', () => {
+    const profile = createDefaultRightDrawProfile()
+    const settings = normalizeSettings({ profiles: [profile], activeProfileId: profile.id })
+
+    expect(settings.profiles[0].provider).toBe(RIGHT_DRAW_PROVIDER_ID)
+    expect(settings.profiles[0].apiMode).toBe('images')
+    expect(settings.activeProfileId).toBe(DEFAULT_RIGHT_DRAW_PROFILE_ID)
+  })
+
+  it('switching to the Right Code provider keeps proxy defaults and images mode', () => {
+    const openaiProfile = createDefaultOpenAIProfile({
+      baseUrl: 'https://api.compat.example.com/v1',
+      model: 'custom-openai-model',
+      apiProxy: false,
+    })
+
+    const rightProfile = switchApiProfileProvider(openaiProfile, RIGHT_DRAW_PROVIDER_ID)
+    expect(rightProfile.provider).toBe(RIGHT_DRAW_PROVIDER_ID)
+    expect(rightProfile.model).toBe(DEFAULT_RIGHT_DRAW_MODEL)
+    expect(rightProfile.apiMode).toBe('images')
+    expect(rightProfile.streamImages).toBe(false)
+
+    const restoredProfile = switchApiProfileProvider(rightProfile, 'openai')
+    expect(restoredProfile.baseUrl).toBe('https://api.compat.example.com/v1')
+    expect(restoredProfile.model).toBe('custom-openai-model')
+  })
+
+  it('treats untouched default settings as replaceable when importing', () => {
+    const merged = mergeImportedSettings(DEFAULT_SETTINGS, {
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'imported-key',
+      model: 'imported-model',
+      timeout: 120,
+      apiMode: 'images',
+      apiProxy: true,
+    })
+
+    expect(merged.profiles).toHaveLength(1)
+    expect(merged.profiles[0].provider).toBe('openai')
+    expect(merged.profiles[0].model).toBe('imported-model')
   })
 })

@@ -29,9 +29,39 @@ export const DEFAULT_RESPONSES_MODEL = 'gpt-5.5'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
 export const DEFAULT_FAL_MODEL = 'openai/gpt-image-2.5'
 export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
+export const DEFAULT_RIGHT_DRAW_PROFILE_ID = 'default-right-draw'
 export const DEFAULT_API_TIMEOUT = 600
 
-const BUILT_IN_PROVIDER_IDS = new Set<ApiProvider>(['openai', 'fal'])
+// Right Code（right.codes）同步画图：POST {base}/draw/v1/images/generations，
+// 不带 async 参数时请求阻塞等待，完成后直接返回 OpenAI Images 形状
+// {created, data: [{url}]}；参考图通过 JSON body 的 image 数组（data URL）传入。
+export const RIGHT_DRAW_PROVIDER_ID = 'right-draw'
+export const DEFAULT_RIGHT_DRAW_MODEL = 'nano-banana-fast'
+// 内置服务商定义只在运行时使用，不写入 settings.customProviders，
+// 因此 submit 的 path 不会经过 normalizeProviderPath 的 v1/ 前缀裁剪。
+export const BUILT_IN_RIGHT_DRAW_PROVIDER: CustomProviderDefinition = {
+  id: RIGHT_DRAW_PROVIDER_ID,
+  name: 'Right Code 画图',
+  template: 'http-image',
+  submit: {
+    path: 'draw/v1/images/generations',
+    method: 'POST',
+    contentType: 'json',
+    body: {
+      model: '$profile.model',
+      prompt: '$prompt',
+      n: '$params.n',
+      size: '$params.size',
+      image: '$inputImages.dataUrls',
+    },
+    result: {
+      imageUrlPaths: ['data.*.url'],
+      b64JsonPaths: ['data.*.b64_json'],
+    },
+  },
+}
+
+const BUILT_IN_PROVIDER_IDS = new Set<ApiProvider>(['openai', 'fal', RIGHT_DRAW_PROVIDER_ID])
 const DEFAULT_CUSTOM_PROVIDER_PATHS = {
   generationPath: 'images/generations',
   editPath: 'images/edits',
@@ -94,7 +124,7 @@ function normalizeZipDownloadRoutes(value: unknown) {
 function normalizeProviderOrder(value: unknown, customProviders: CustomProviderDefinition[]): string[] | undefined {
   if (!Array.isArray(value)) return undefined
 
-  const providerIds = ['openai', 'fal', ...customProviders.map((provider) => provider.id)]
+  const providerIds = ['openai', 'fal', RIGHT_DRAW_PROVIDER_ID, ...customProviders.map((provider) => provider.id)]
   const knownIds = new Set(providerIds)
   const ordered = value
     .map(String)
@@ -352,6 +382,25 @@ export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): Ap
   }
 }
 
+// 锁定配置：默认走 Nginx API 代理 + Right Code 画图接口。
+export function createDefaultRightDrawProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
+  return {
+    id: DEFAULT_RIGHT_DRAW_PROFILE_ID,
+    name: '默认',
+    provider: RIGHT_DRAW_PROVIDER_ID,
+    baseUrl: DEFAULT_BASE_URL,
+    apiKey: '',
+    model: DEFAULT_RIGHT_DRAW_MODEL,
+    timeout: DEFAULT_API_TIMEOUT,
+    codexCli: false,
+    apiProxy: true,
+    streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
+    ...overrides,
+    apiMode: 'images',
+    streamImages: false,
+  }
+}
+
 export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvider, customProvider?: CustomProviderDefinition): ApiProfile {
   const providerDrafts = {
     ...profile.providerDrafts,
@@ -377,6 +426,22 @@ export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvi
       apiMode: 'images',
       codexCli: false,
       apiProxy: false,
+      responseFormatB64Json: savedDraft?.responseFormatB64Json,
+      streamImages: false,
+      streamPartialImages: savedDraft?.streamPartialImages ?? DEFAULT_STREAM_PARTIAL_IMAGES,
+      providerDrafts,
+    }
+  }
+
+  if (provider === RIGHT_DRAW_PROVIDER_ID) {
+    return {
+      ...profile,
+      provider,
+      baseUrl: savedDraft?.baseUrl ?? DEFAULT_BASE_URL,
+      model: savedDraft?.model ?? DEFAULT_RIGHT_DRAW_MODEL,
+      apiMode: 'images',
+      codexCli: false,
+      apiProxy: savedDraft?.apiProxy ?? DEFAULT_OPENAI_API_PROXY,
       responseFormatB64Json: savedDraft?.responseFormatB64Json,
       streamImages: false,
       streamPartialImages: savedDraft?.streamPartialImages ?? DEFAULT_STREAM_PARTIAL_IMAGES,
@@ -430,7 +495,7 @@ function normalizeProviderDraft(input: unknown, provider: ApiProvider, customPro
   const baseUrl = typeof input.baseUrl === 'string' ? input.baseUrl : undefined
   const model = typeof input.model === 'string' && input.model.trim() ? input.model : undefined
   const apiMode = input.apiMode === 'responses' ? 'responses' : input.apiMode === 'images' ? 'images' : undefined
-  const knownProvider = provider === 'fal' || provider === 'openai' || customProviderIds.has(provider)
+  const knownProvider = provider === 'fal' || provider === 'openai' || provider === RIGHT_DRAW_PROVIDER_ID || customProviderIds.has(provider)
   if (!knownProvider) return undefined
 
   return {
@@ -459,7 +524,9 @@ function normalizeProviderDrafts(input: unknown, customProviderIds: Set<string>)
 export function normalizeApiProfile(input: unknown, fallback?: Partial<ApiProfile>, customProviderIds = new Set<string>()): ApiProfile {
   const record = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const rawProvider = typeof record.provider === 'string' ? record.provider : ''
-  const provider: ApiProvider = rawProvider === 'fal' || customProviderIds.has(rawProvider) ? rawProvider : 'openai'
+  const provider: ApiProvider = rawProvider === 'fal' || rawProvider === RIGHT_DRAW_PROVIDER_ID || customProviderIds.has(rawProvider)
+    ? rawProvider
+    : 'openai'
   const apiMode: ApiMode = provider === 'openai' && record.apiMode === 'responses' ? 'responses' : 'images'
   const defaults = provider === 'fal'
     ? createDefaultFalProfile(fallback)
@@ -581,7 +648,8 @@ export function getAgentImageApiProfile(settings: Partial<AppSettings> | unknown
 
 export function getCustomProviderDefinition(settings: Partial<AppSettings> | unknown, provider: ApiProvider): CustomProviderDefinition | null {
   const normalized = normalizeSettings(settings)
-  return normalized.customProviders.find((item) => item.id === provider) ?? null
+  return normalized.customProviders.find((item) => item.id === provider)
+    ?? (provider === RIGHT_DRAW_PROVIDER_ID ? BUILT_IN_RIGHT_DRAW_PROVIDER : null)
 }
 
 export function getApiProviderLabel(settings: Partial<AppSettings> | unknown, provider: ApiProvider): string {
@@ -699,11 +767,25 @@ function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
     profile.streamPartialImages === DEFAULT_STREAM_PARTIAL_IMAGES
 }
 
+function isDefaultRightDrawProfile(profile: ApiProfile): boolean {
+  return profile.id === DEFAULT_RIGHT_DRAW_PROFILE_ID &&
+    profile.name === '默认' &&
+    profile.provider === RIGHT_DRAW_PROVIDER_ID &&
+    profile.baseUrl === DEFAULT_BASE_URL &&
+    profile.apiKey === '' &&
+    profile.model === DEFAULT_RIGHT_DRAW_MODEL &&
+    profile.timeout === DEFAULT_API_TIMEOUT &&
+    profile.apiMode === 'images' &&
+    profile.codexCli === false &&
+    profile.apiProxy === true &&
+    profile.streamImages === false &&
+    profile.streamPartialImages === DEFAULT_STREAM_PARTIAL_IMAGES
+}
+
 function hasOnlyDefaultProfiles(settings: AppSettings): boolean {
-  return settings.customProviders.length === 0 &&
-    settings.profiles.length === 1 &&
-    settings.activeProfileId === DEFAULT_OPENAI_PROFILE_ID &&
-    isDefaultOpenAIProfile(settings.profiles[0])
+  if (settings.customProviders.length !== 0 || settings.profiles.length !== 1) return false
+  return (settings.activeProfileId === DEFAULT_OPENAI_PROFILE_ID && isDefaultOpenAIProfile(settings.profiles[0])) ||
+    (settings.activeProfileId === DEFAULT_RIGHT_DRAW_PROFILE_ID && isDefaultRightDrawProfile(settings.profiles[0]))
 }
 
 function createImportedProfileId(provider: ApiProvider, usedIds: Set<string>): string {
@@ -846,13 +928,14 @@ export function mergeImportedSettings(currentSettings: Partial<AppSettings> | un
 export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
   baseUrl: DEFAULT_BASE_URL,
   apiKey: '',
-  model: DEFAULT_IMAGES_MODEL,
+  model: DEFAULT_RIGHT_DRAW_MODEL,
   timeout: DEFAULT_API_TIMEOUT,
   apiMode: 'images',
   codexCli: false,
   apiProxy: DEFAULT_OPENAI_API_PROXY,
   streamImages: false,
   streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
+  profiles: [createDefaultRightDrawProfile()],
   customProviders: [],
   clearInputAfterSubmit: false,
   persistInputOnRestart: true,

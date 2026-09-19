@@ -1,5 +1,5 @@
 import { DEFAULT_PARAMS, type AppSettings, type TaskParams } from '../types'
-import { getActiveApiProfile } from './apiProfiles'
+import { getActiveApiProfile, RIGHT_DRAW_PROVIDER_ID } from './apiProfiles'
 import { normalizeImageSize } from './size'
 
 export const DEFAULT_FAL_IMAGE_SIZE = '1360x1024'
@@ -32,6 +32,11 @@ export function normalizeParamsForSettings(
     if (nextParams.quality === 'auto') nextParams.quality = 'high'
     nextParams.moderation = DEFAULT_PARAMS.moderation
     nextParams.output_compression = DEFAULT_PARAMS.output_compression
+  }
+
+  // Right Code 画图接口不支持 auto 尺寸，落到 1:1 的 1024x1024。
+  if (activeProfile.provider === RIGHT_DRAW_PROVIDER_ID && nextParams.size === 'auto') {
+    nextParams.size = '1024x1024'
   }
 
   if (nextParams.output_format === 'png') {

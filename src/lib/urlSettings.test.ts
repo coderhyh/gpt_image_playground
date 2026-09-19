@@ -357,7 +357,7 @@ describe('URL settings params', () => {
 
   it('patches the active profile instead of creating a new one when only default config is shown', async () => {
     const { buildSettingsFromUrlParams } = await importDefaultConfigOnlyUrlSettings()
-    const current = normalizeSettings(DEFAULT_SETTINGS)
+    const current = normalizeSettings({ ...DEFAULT_SETTINGS, profiles: [createDefaultOpenAIProfile()] })
     const next = normalizeSettings({
       ...current,
       ...buildSettingsFromUrlParams(current, new URLSearchParams('apiUrl=https://api.example.com/v1&apiKey=test-key&model=custom-model&profileName=导入配置&apiMode=responses')),
@@ -407,7 +407,7 @@ describe('URL settings params', () => {
     const params = new URLSearchParams()
     params.set('settings', JSON.stringify(importedSettings))
 
-    const current = normalizeSettings(DEFAULT_SETTINGS)
+    const current = normalizeSettings({ ...DEFAULT_SETTINGS, profiles: [createDefaultOpenAIProfile()] })
     const next = normalizeSettings({
       ...current,
       ...buildSettingsFromUrlParams(current, params),
@@ -465,7 +465,7 @@ describe('URL settings params', () => {
     const params = new URLSearchParams()
     params.set('settings', JSON.stringify(importedSettings))
 
-    const current = normalizeSettings(DEFAULT_SETTINGS)
+    const current = normalizeSettings({ ...DEFAULT_SETTINGS, profiles: [createDefaultOpenAIProfile()] })
     const next = normalizeSettings({
       ...current,
       ...buildSettingsFromUrlParams(current, params),

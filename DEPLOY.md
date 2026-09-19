@@ -6,9 +6,9 @@
 
 **核心改动：**
 - API Key 完全在服务端配置，前端不暴露
-- 固定使用自建 Nexus API（`https://nexus.apimf.top/v1/images/generations`）
-- 固定模型 `gpt-image-2.5`
-- 生图参数精简为「尺寸」+「数量」（Nexus 仅接收 model/prompt/size/response_format）
+- 默认使用 Right Code 画图接口（`https://www.right.codes/draw/v1/images/generations`，同步等待直接返回图片）
+- 默认模型 `nano-banana-fast`（可在设置中修改）
+- 生图参数精简为「尺寸」+「数量」
 - 设置页仅保留「习惯配置」与「数据管理」，移除 API/Agent/关于入口
 - 移除赞助作者弹窗
 - 删除 Agent 功能，只保留画廊模式
@@ -18,41 +18,43 @@
 
 ## 快速部署（Docker）
 
+> 推荐直接使用 `docker compose up -d --build`（compose.yml 已配置好端口 7767、容器名 `image-playground-shunfeng`）。
+
 ### 1. 构建镜像
 
 ```bash
 cd ~/Desktop/code/gpt_image_playground
-docker build -f deploy/Dockerfile -t image-playground .
+docker build -f deploy/Dockerfile -t image-playground-shunfeng .
 ```
 
 ### 2. 运行容器
 
 ```bash
 docker run -d \
-  --name image-playground \
-  -p 80:80 \
-  -e API_KEY=*** \
-  image-playground
+  --name image-playground-shunfeng \
+  -p 7767:80 \
+  --env-file .env \
+  image-playground-shunfeng
 ```
 
 ### 3. 访问
 
-打开浏览器访问 `http://你的服务器IP`，即可直接使用，无需任何配置。
+打开浏览器访问 `http://你的服务器IP:7767`，即可直接使用，无需任何配置。
 
 ---
 
 ## 架构说明
 
 ```
-浏览器 ──→ Nginx (:80) ──→ Nexus API
-                │              (nexus.apimf.top)
+浏览器 ──→ Nginx (:7767→80) ──→ Right Code API
+                │              (www.right.codes)
                 │ 注入 Authorization: Bearer $API_KEY
                 │
                 └── 静态文件 (dist/)
 ```
 
-- **前端**：React SPA，调用 `/api-proxy/images/generations`
-- **Nginx**：代理 `/api-proxy/` → `https://nexus.apimf.top/v1/`，同时注入 API Key
+- **前端**：React SPA，画图走 `/api-proxy/draw/v1/images/generations`（同步等待返回图片 URL）
+- **Nginx**：代理 `/api-proxy/` → `https://www.right.codes/`，同时注入 API Key
 - **API Key**：仅存在于服务器环境变量，前端 JS 代码中不包含
 
 ---
@@ -61,8 +63,8 @@ docker run -d \
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `API_KEY` | 是 | Nexus API 的 Key（`sk-...`） |
-| `API_PROXY_URL` | 否 | 上游 API 地址，默认 `https://nexus.apimf.top/v1` |
+| `API_KEY` | 是 | Right Code 的 Key（`sk-...`） |
+| `API_PROXY_URL` | 否 | 上游 API 地址，默认 `https://www.right.codes` |
 | `API_BASE_URL` | 否 | 前端请求的 API 路径，默认 `/api-proxy`（走 Nginx 代理）。设为空字符串则用默认值 |
 
 ### 修改配置（不重建镜像）
@@ -71,22 +73,22 @@ Key 或 URL 变了只需重启容器，不需要重新构建：
 
 ```bash
 # 改 Key
-docker rm -f image-playground
-docker run -d --name image-playground -p 80:80 \
+docker rm -f image-playground-shunfeng
+docker run -d --name image-playground-shunfeng -p 7767:80 \
   -e API_KEY=*** \
-  image-playground
+  image-playground-shunfeng
 
 # 改上游 API 地址
-docker rm -f image-playground
-docker run -d --name image-playground -p 80:80 \
-  -e API_KEY=*** -e API_PROXY_URL=https://新地址/v1 \
-  image-playground
+docker rm -f image-playground-shunfeng
+docker run -d --name image-playground-shunfeng -p 7767:80 \
+  -e API_KEY=*** -e API_PROXY_URL=https://新地址 \
+  image-playground-shunfeng
 
 # 改前端请求路径
-docker rm -f image-playground
-docker run -d --name image-playground -p 80:80 \
+docker rm -f image-playground-shunfeng
+docker run -d --name image-playground-shunfeng -p 7767:80 \
   -e API_KEY=*** -e API_BASE_URL=/自定义路径 \
-  image-playground
+  image-playground-shunfeng
 ```
 
 ---

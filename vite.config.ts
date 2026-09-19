@@ -28,7 +28,7 @@ export default defineConfig(({ command, mode }) => {
   // （凭证只存在于 Node 端，不会进入前端 bundle，和 docker 的 nginx 注入等价）
   const env = command === 'serve' ? loadEnv(mode, process.cwd(), '') : {}
   const apiKey = env.API_KEY
-  const apiProxyUrl = env.API_PROXY_URL || 'https://www.packyapi.ai/v1'
+  const apiProxyUrl = env.API_PROXY_URL || 'https://www.right.codes'
   const accessToken = env.PACKY_ACCESS_TOKEN
   const userId = env.PACKY_USER_ID
 
